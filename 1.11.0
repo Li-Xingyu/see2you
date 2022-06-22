@@ -1,0 +1,22 @@
+Progress: resolved 0, reused 1, downloaded 0, added 0
+Progress: resolved 93, reused 89, downloaded 0, added 0
+ WARN  deprecated axios@0.19.2: Critical security vulnerability fixed in v0.21.1. For more information, see https://github.com/axios/axios/pull/3410
+Progress: resolved 370, reused 337, downloaded 0, added 0
+Progress: resolved 806, reused 805, downloaded 0, added 0
+ WARN  deprecated stable@0.1.8: Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility
+Packages: +2 -2
+++--
+Progress: resolved 947, reused 946, downloaded 0, added 2, done
+
+dependencies:
++ webpack ^5.73.0
+
+devDependencies:
+- @vue/eslint-config-standard 6.1.0
++ @vue/eslint-config-standard 6.1.0
+
+ WARN  Issues with peer dependencies found
+.
+└─┬ @vue/eslint-config-standard
+  └── ✕ unmet peer eslint-plugin-vue@^7.0.0: found 8.7.1
+
