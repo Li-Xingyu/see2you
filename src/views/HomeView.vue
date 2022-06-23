@@ -1,7 +1,7 @@
 <template>
-  <div class="video-container">
+    <div class="video-container">
         <div class="video-box">
-            <h2 class="video-name"></h2>
+            <h2 class="video-name">👰</h2>
             <video
                     ref="video"
                     preload="auto"
@@ -23,7 +23,16 @@
                 </p>
             </video>
         </div>
-        <div class="video-control-wrapper">
+    <div>
+    <a-button  @click="test" type="primary" block>
+       同步
+    </a-button>
+    <a-tabs  @change="callback">
+      <a-tab-pane key="1" tab="播放列表"></a-tab-pane>
+      <a-tab-pane key="2" tab="待开发....." force-render></a-tab-pane>
+    </a-tabs>
+    </div>
+        <div v-if="activeKey=='1'" class="video-control-wrapper">
             <!-- <article id="coplay" class="active" data-drag-id="0" style="cursor: default; transform: translate(0px);">
                 <button @click="playVideo" id="coplay-play" title="Play">
                     <svg v-if="!playing" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1408 1792">
@@ -52,13 +61,35 @@
                 </button>
             </article> -->
             <!-- <a class="view-btn" href="/movie/">浏览目录</a> -->
-
-            <div class="address-input">
+            
+            <a-input-search
+              v-model="addSrc"
+              placeholder="请输入视频链接"
+              enter-button="添加"
+              size="default"
+              @search="addVideo"
+            />
+            <!-- <div class="address-input">
                 <input v-model="videoSrc" type="text" placeholder="视频地址">
-                <a href="javascript:;" class="submit-btn" @click="test">添加视频</a>
-            </div>
-            <h2 class="video-list-title">视频列表：</h2>
-            <ul class="video-list">
+                <a href="javascript:;" class="submit-btn" @click="addVideo">添加视频</a>
+            </div> -->
+            <!-- <h2 class="video-list-title">视频列表：</h2> -->
+        
+                <a-config-provider>
+                  <div class="config-provider">
+                    <a-list :data-source="videoList" >
+                     <a-list-item slot="renderItem" slot-scope="item,index">
+                        <a @click="playVideoItem(item)" slot="actions">播放</a>
+                        <a @click="deleteVideoItem(index)" slot="actions">删除</a>
+                        <a-list-item-meta>
+                          <li  slot="title" >{{ item }}</li>
+                        </a-list-item-meta>
+                      </a-list-item>
+                    </a-list>
+                  </div>
+                </a-config-provider>
+           
+            <!-- <ul class="video-list">
                 <li class="video-item" v-for="(videoItem,index) in videoList" :key="index">
                     <p class="video-name">{{videoItem}}</p>
                     <div class="button-box">
@@ -66,7 +97,7 @@
                         <a href="javascript:;" class="button-play" @click="deleteVideoItem(index)">删除</a>
                     </div>
                 </li>
-            </ul>
+            </ul> -->
         </div>
     </div>
 
@@ -80,6 +111,7 @@ import HelloWorld from '@/components/HelloWorld.vue'
 export default {
  data() {
    return{
+     activeKey:'1',
      lock:false,
      index:0,
     socket: null,
@@ -87,31 +119,35 @@ export default {
     hls: null,
     goEasyConnect: null,
     videoList: [],
-    videoSrc: 'https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8',
+    addSrc:'',
+    videoSrc: 'https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8',//https://e1.monidai.com/ppvod/B5812931A0D9AFEB4AA47F9EEE41F772.m3u8
     playing: false,
     controlParam: {
       user: '',
       action: '',
       time: '',
+      src:''
     },
     userId: '',
     // goEasy 添加以下变量
-    channel: 'channel1', // GoEasy channel
-    appkey: '******', // GoEasy应用appkey，替换成你的appkey
+    // channel: 'channel1', // GoEasy channel
+    // appkey: '******', // GoEasy应用appkey，替换成你的appkey
 
-    // leancloud-realtime 添加以下变量，appId、appKey、server这几个值去leancloud控制台>设置>应用凭证里面找
-    chatRoom: null,
-    appId: '*******************',
-    appKey: '*******************',
-    server: 'https://*******************.***.com', // REST API 服务器地址
+    // // leancloud-realtime 添加以下变量，appId、appKey、server这几个值去leancloud控制台>设置>应用凭证里面找
+    // chatRoom: null,
+    // appId: '*******************',
+    // appKey: '*******************',
+    // server: 'https://*******************.***.com', // REST API 服务器地址
   }
   },   
   methods: {
+    callback(key) {
+      this.activeKey=key
+    },
     delock(){this.lock=false},
     test(){
       this.controlParam.action = 'sync'
-        this.controlParam.time = this.player.currentTime
-        this.sendMessage(this.controlParam)
+      this.sendMessage(this.controlParam)
       console.log(this.player.currentTime)
     },
     randomString(length) {
@@ -122,20 +158,24 @@ export default {
       return str.substr(0, length)
     },
     addVideo() {
-      if (this.videoSrc) {
-        this.videoList.push(decodeURI(this.videoSrc))
+      if (this.addSrc) {
+        this.videoList.push(decodeURI(this.addSrc))
       }
       // localStorage.setItem('videoList', JSON.stringify(this.videoList))
     },
     playVideoItem(src) {
+      this.videoSrc=src
       if(src.includes('.m3u8')){
         this.hls.loadSource(src);
         this.hls.attachMedia(this.player);
+        
       } else {
         this.$refs.video.src = src
+        
       }
       // localStorage.setItem('currentPlayVideo', src)
-
+     
+      this.seekVideo('')
     },
     deleteVideoItem(index) {
       this.videoList.splice(index, 1)
@@ -165,11 +205,12 @@ export default {
         this.sendMessage(this.controlParam)
       },
     
-    seekVideo() {
-      this.player.pause()
-      this.controlParam.action = 'seek'
-      this.controlParam.time = this.player.currentTime
-      this.sendMessage(this.controlParam)
+    seekVideo(result) {
+           this.controlParam['senduser']=result
+           this.controlParam.action = 'seek'
+           this.controlParam.time = this.player.currentTime
+           this.controlParam.src=this.videoSrc
+           this.sendMessage(this.controlParam)
     },
     sendMessage(controlParam){
       const params = JSON.stringify(controlParam)
@@ -205,13 +246,17 @@ export default {
           break
         case "seek":
           this.lock=true
-          this.player.currentTime = (result.time);
-           this.player.play();
+          if (this.videoSrc!=result.src){
+            this.playVideoItem(result.src)
+            }
+            this.player.currentTime = (result.time+0.5);
+            this.player.play();
+          
+       
+         
           break
         case "sync":
-           this.controlParam.action = 'seek'
-           this.controlParam.time = this.player.currentTime
-           this.sendMessage(this.controlParam)
+           this.seekVideo(result.senduser)
       }
       
     },
@@ -282,10 +327,11 @@ export default {
     }
 
     /*使用socket-io*/
-    this.socket = io('http://127.0.0.1:3002'); // 替换成你的websocket服务地址
+    this.socket = io('http://127.0.0.1:3002/'); // 替换成你的websocket服务地址
     this.socket.on('video-control', (res) => {
       console.log(res)
       const result = JSON.parse(res);
+      console.log(result)
       if (result.user !== this.userId) {
         this.resultHandler(result)
       }
@@ -420,3 +466,37 @@ export default {
   }
 }
 </script>
+<style scoped>
+.video-container{
+  display: flex;
+  flex-direction:column;
+  height: 100%;
+}
+.video-control-wrapper{
+    flex: 1;
+    display: flex;
+    flex-direction:column;
+    overflow:auto
+  }
+  .config-provider{
+    flex: 1;
+    display: flex;
+    overflow: auto;
+  }
+.ant-list {
+  width: 100%;
+  flex: 1;
+}
+.ant-list-item-meta{
+  width: 70%;
+  overflow: hidden;
+}
+.ant-list-item-meta-content{
+  width: 70%;
+  overflow: hidden;
+}
+.video-name{
+  margin-bottom:0px;
+  line-height: 40px;
+}
+</style>
